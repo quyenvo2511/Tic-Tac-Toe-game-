@@ -14,7 +14,22 @@ function getNextValue(squares) {
   // STEP 3
   // Count how many X and O in squares.
   // If they are equal the nextValue must be X, otherwise O
+  let totalX = squares.filter((square) => square === "X").length;
+  let totalO = squares.filter((square) => square === "O").length;
+
+  return totalX <= totalO ? "X" : "O";
 }
+
+const boardLine = [
+  [0, 1, 2],
+  [3, 4, 5],
+  [6, 7, 8],
+  [0, 3, 6],
+  [1, 4, 7],
+  [2, 5, 8],
+  [0, 4, 8],
+  [2, 4, 6],
+];
 
 function getWinner(squares) {
   // STEP 4
@@ -28,6 +43,31 @@ function getWinner(squares) {
   // [2, 5, 8] : the third column
   // [0, 4, 8] : the top-left to bottom-right diagonal
   // [2, 4, 6] : the top-right to bottom-left diagonal
+  for (let i = 0; i < boardLine.length; i++) {
+    const [a, b, c] = boardLine[i];
+    if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
+      return squares[a];
+    }
+  }
+
+  return null;
+}
+
+function checkDraw(squares) {
+  let cannotWin = 0;
+  boardLine.forEach((line) => {
+    let haveX = false,
+      haveO = false;
+    console.log(line);
+    line.forEach((index) => {
+      let value = squares[index];
+      // squares[0] squares[1] ....
+      if (value === "X") haveX = true;
+      if (value === "O") haveO = true;
+    });
+    if (haveX && haveO) cannotWin += 1;
+  });
+  return cannotWin === boardLine.length;
 }
 
 function getStatus(squares, winner, nextValue) {
@@ -35,11 +75,16 @@ function getStatus(squares, winner, nextValue) {
   // Do we have a winner? -> `Winner: ${winner}`
   // If there are no free square to play, or the sum of null in squares equals 0 -> Draw game
   // Otherwise -> `Next player: ${nextValue}`
+  // const winner = winner ? `Winner: ${winner}`
+  if (checkDraw(squares)) return `Draw`;
+  if (getWinner(squares)) return `Winner: ${winner}`;
+  return nextValue;
 }
 
 const Game = () => {
   // STEP 6.1 - Rocket: History of moves
   // Comment out this line below
+
   const [squares, setSquares] = useState(Array(9).fill(null));
 
   // STEP 6.2 - Rocket: History of moves
@@ -75,8 +120,10 @@ const Game = () => {
     // - set the squares to your copy
 
     const squaresCopy = [...squares];
-    squaresCopy[index] = index;
+    squaresCopy[index] = nextValue;
     setSquares(squaresCopy);
+    getNextValue(squaresCopy);
+    // setWhatisNext(() => (nextValue === "X" ? "O" : "X"));
   };
 
   const restartGame = () => {
@@ -85,24 +132,25 @@ const Game = () => {
     // -------
     // STEP 6.4 - Rocket: History of moves
     // Restart the game by reset `history` and `currentStep`
+    setSquares(Array(9).fill(null));
   };
 
   // STEP 6.5 - Rocket: History of moves
   // Create the list of moves in history
-  // const moves = history.___((squares, step) => {
-  //   const description = step ? ___ : ___;
-  //   const isCurrentStep = step === ___;
-  //   return (
-  //     <li key={step}>
-  //       <Button
-  //         variant="outline-success"
-  //         size="sm"
-  //         disabled={isCurrentStep}
-  //         onClick={() => setCurrentStep(step)}
-  //       >
-  //         {description} {isCurrentStep ? "(current)" : null}
-  //       </Button>
-  //     </li>
+  // const moves = history.map((squares, step) => {
+  // const description = step ? `Go to ${squares} current` : `Go to game start`;
+  // const isCurrentStep = step === "current";
+  // return (
+  // <li key={step}>
+  //   <Button
+  //     variant="outline-success"
+  //     size="sm"
+  //     disabled={isCurrentStep}
+  //     onClick={() => setCurrentStep(step)}
+  //   >
+  //     {description} {isCurrentStep ? "(current)" : null}
+  //   </Button>
+  // </li>
   //   );
   // });
 
@@ -116,6 +164,7 @@ const Game = () => {
         </Col>
       </Row>
       <Row>
+        <h1>Next Player: {status}</h1>
         <Col md={6}>
           <Board squares={squares} onClick={clickSquare} />
           <div>
@@ -123,9 +172,7 @@ const Game = () => {
           </div>
         </Col>
         <Col md={6}>
-          <div>
-            <strong>{status}</strong>
-          </div>
+          <div>{/* <strong>{status}</strong> */}</div>
           {/* STEP 6.6 - Rocket: History of moves */}
           {/* The list of moves */}
           {/* <ol>{moves}</ol> */}
